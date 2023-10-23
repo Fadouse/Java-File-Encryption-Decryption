@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
 
-public class FileEncryptor {
+public class FileEncrypt {
 
     public static void encrypt(String inputFilePath) throws Exception {
         // Generate AES key from the timestamp
@@ -31,8 +31,19 @@ public class FileEncryptor {
 
         // Save the AES key to a file
         ObjectOutputStream keyOut = new ObjectOutputStream(Files.newOutputStream(Paths.get(inputFilePath + ".encrypted" + ".key")));
-        keyOut.writeObject(secretKey);
+        keyOut.writeObject(modifyKey(secretKey));
         keyOut.close();
+    }
 
+    private static byte[] modifyKey(SecretKey originalKey) {
+        byte[] keyBytes = originalKey.getEncoded();
+
+        // Complex bit manipulation operations
+        for (int i = 0; i < keyBytes.length; i++) {
+            keyBytes[i] = (byte) (keyBytes[i] ^ 0xFF); // Invert all bits using XOR (^)
+            //这里可以添加自己的位运算
+        }
+
+        return keyBytes;
     }
 }

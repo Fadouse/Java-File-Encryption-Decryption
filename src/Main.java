@@ -1,5 +1,5 @@
-import impl.FileDecryptor;
-import impl.FileEncryptor;
+import impl.FileDecrypt;
+import impl.FileEncrypt;
 
 import javax.swing.*;
 import java.awt.*;
@@ -111,7 +111,7 @@ public class Main {
             if (isEncryptionMode) {
                 // 文件加密
                 try {
-                    FileEncryptor.encrypt(selectedFilePath);
+                    FileEncrypt.encrypt(selectedFilePath);
                     JOptionPane.showMessageDialog(null, "File encrypted successfully.");
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Error: " + ex.getMessage());
@@ -122,7 +122,7 @@ public class Main {
                     String returnValue = JOptionPane.showInputDialog("Save File name");
                     if (returnValue != null) {
                         String outputFilePath = String.valueOf(Paths.get(selectedPath, returnValue));
-                        FileDecryptor.decrypt(selectedFilePath, outputFilePath, selectedFilePath);
+                        FileDecrypt.decrypt(selectedFilePath, outputFilePath, selectedFilePath);
                         JOptionPane.showMessageDialog(null, "File decrypted successfully.");
                     }
                 } catch (Exception ex) {
