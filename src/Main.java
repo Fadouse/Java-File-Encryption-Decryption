@@ -66,7 +66,7 @@ public class Main {
         frame.pack();
         frame.setLocationRelativeTo(null);
 
-        // 添加拖拽文件功能
+        // 拖拽文件功能
         frame.setDropTarget(new DropTarget() {
             @Override
             public void drop(DropTargetDropEvent dtde) {
@@ -109,7 +109,7 @@ public class Main {
                 return;
             }
             if (isEncryptionMode) {
-                // Perform encryption
+                // 文件加密
                 try {
                     FileEncryptor.encrypt(selectedFilePath);
                     JOptionPane.showMessageDialog(null, "File encrypted successfully.");
@@ -117,6 +117,7 @@ public class Main {
                     JOptionPane.showMessageDialog(null, "Error: " + ex.getMessage());
                 }
             } else {
+                // 文件解密
                 try {
                     String returnValue = JOptionPane.showInputDialog("Save File name");
                     if (returnValue != null) {
