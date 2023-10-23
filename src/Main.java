@@ -14,6 +14,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class Main {
     private static String selectedFilePath;
     private static String selectedPath;
+    private static String selectedFileName;
     private static boolean isEncryptionMode = true;
 
     public static void main(String[] args) {
@@ -76,6 +77,7 @@ public class Main {
                     if (!droppedFiles.isEmpty()) {
                         File selectedFile = droppedFiles.get(0);
                         selectedFilePath = selectedFile.getAbsolutePath();
+                        selectedFileName = selectedFile.getName();
                         selectedPath = selectedFile.getParent();
                         filePathField.setText(selectedFilePath);
                     }
@@ -93,6 +95,7 @@ public class Main {
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
                 selectedFilePath = selectedFile.getAbsolutePath();
+                selectedFileName = selectedFile.getName();
                 selectedPath = selectedFile.getParent();
                 filePathField.setText(selectedFilePath);
             }
@@ -110,6 +113,10 @@ public class Main {
             }
             if (isEncryptionMode) {
                 // 文件加密
+                if(selectedFileName.contains(".encrypted")){
+                    JOptionPane.showMessageDialog(null, "This file is already encrypted.");
+                    return;
+                }
                 try {
                     FileEncrypt.encrypt(selectedFilePath);
                     JOptionPane.showMessageDialog(null, "File encrypted successfully.");
@@ -119,7 +126,10 @@ public class Main {
             } else {
                 // 文件解密
                 try {
-                    String returnValue = JOptionPane.showInputDialog("Save File name");
+                    String fileName = selectedFileName.replace(".encrypted", "");
+                    fileName = fileName.replace(fileName.replace(".jar",""), fileName.replace(".jar","") + "-decrypt");
+
+                    String returnValue = JOptionPane.showInputDialog("Save File name", fileName);
                     if (returnValue != null) {
                         String outputFilePath = String.valueOf(Paths.get(selectedPath, returnValue));
                         FileDecrypt.decrypt(selectedFilePath, outputFilePath, selectedFilePath);
