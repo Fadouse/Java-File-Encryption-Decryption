@@ -1,8 +1,9 @@
 package impl;
 
+import javafx.stage.FileChooser;
+
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
-import javax.swing.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -14,26 +15,28 @@ import java.util.zip.GZIPInputStream;
 public class FileDecrypt {
     public static void decrypt(String inputFilePath, String outputDirectory, String keyFilePath) throws Exception {
         // Read the AES key from the key file
-        SecretKey secretKey = null;
-        try {
-            ObjectInputStream keyIn = new ObjectInputStream(Files.newInputStream(Paths.get(keyFilePath + ".key")));
-            secretKey = restoreKey((byte[]) keyIn.readObject());
-            keyIn.close();
-        }catch (Exception e){
-            JOptionPane.showMessageDialog(null, "Aes key file not found, please select key file.");
+        SecretKey secretKey;
+        Path path = Paths.get(keyFilePath + ".key");
 
-            JFileChooser fileChooser = new JFileChooser();
-            int returnValue = fileChooser.showOpenDialog(null);
-            if (returnValue == JFileChooser.APPROVE_OPTION) {
-                File selectedFile = fileChooser.getSelectedFile();
-                ObjectInputStream keyIn = new ObjectInputStream(Files.newInputStream(selectedFile.toPath()));
-                secretKey = restoreKey((byte[]) keyIn.readObject());
-                keyIn.close();
-            }
+        if (!Files.exists(path)) {
+            // If the key file doesn't exist, prompt the user to select it
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Select AES Key File");
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("AES Key Files", "*.key"));
+            File selectedFile = fileChooser.showOpenDialog(null);
+
+            if (selectedFile == null)
+                throw new Exception("AES key file not found.");
+            path = selectedFile.toPath();
         }
 
-        if(secretKey == null)
-            throw new Exception("Aes key file not valid.");
+        try {
+            ObjectInputStream keyIn = new ObjectInputStream(Files.newInputStream(path));
+            secretKey = restoreKey((byte[]) keyIn.readObject());
+            keyIn.close();
+        } catch (Exception e) {
+            throw new Exception("AES key file not valid.");
+        }
 
         // Read the encrypted file
         byte[] encryptedData = Files.readAllBytes(Paths.get(inputFilePath));

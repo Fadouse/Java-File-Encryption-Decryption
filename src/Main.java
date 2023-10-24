@@ -1,138 +1,138 @@
 import impl.FileDecrypt;
 import impl.FileEncrypt;
+import javafx.application.Application;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.input.TransferMode;
+import javafx.scene.layout.GridPane;
+import javafx.stage.Stage;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.dnd.DnDConstants;
-import java.awt.dnd.DropTarget;
-import java.awt.dnd.DropTargetDropEvent;
-import java.io.File;
 import java.nio.file.Paths;
-import javax.swing.filechooser.FileNameExtensionFilter;
+import java.util.Objects;
 
-public class Main {
-    private static String selectedFilePath;
-    private static String selectedPath;
-    private static String selectedFileName;
-    private static boolean isEncryptionMode = true;
+public class Main extends Application {
+    private String selectedFilePath;
+    private String selectedPath;
+    private String selectedFileName;
+    private boolean isEncryptionMode = true;
 
     public static void main(String[] args) {
-        JFrame frame = new JFrame("File Encryption/Decryption");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        launch(args);
+    }
 
-        JPanel mainPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(5, 5, 5, 5);
+    @Override
+    public void start(Stage primaryStage) {
+        primaryStage.setTitle("File Encryption/Decryption");
 
-        JLabel titleLabel = new JLabel("Select a file to " + (isEncryptionMode ? "encrypt" : "decrypt") + ":");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 16)); // 调整标题的字体大小
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        mainPanel.add(titleLabel, gbc);
+        Image icon = new Image(Objects.requireNonNull(getClass().getResourceAsStream("resource/tool.png")));
+        primaryStage.getIcons().add(icon);
 
-        JTextField filePathField = new JTextField();
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.gridwidth = 1;
-        gbc.weightx = 1.0;
-        mainPanel.add(filePathField, gbc);
+        GridPane mainGrid = new GridPane();
+        mainGrid.setHgap(10);
+        mainGrid.setVgap(10);
+        mainGrid.setPadding(new Insets(10, 10, 10, 10));
 
-        JButton browseButton = new JButton("Browse");
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        gbc.gridwidth = 1;
-        gbc.weightx = 0.2;
-        mainPanel.add(browseButton, gbc);
+        Label titleLabel = new Label("Select a file to " + (isEncryptionMode ? "encrypt" : "decrypt") + ":");
+        titleLabel.setStyle("-fx-font-size: 16");
 
-        JButton toggleButton = new JButton("Toggle (Encrypt/Decrypt)");
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.gridwidth = 2;
-        gbc.weightx = 1.0;
-        mainPanel.add(toggleButton, gbc);
+        TextField filePathField = new TextField();
+        filePathField.setPrefColumnCount(20);
+        filePathField.setEditable(false);
 
-        JButton performButton = new JButton("Perform Action");
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.gridwidth = 2;
-        gbc.weightx = 1.0;
-        mainPanel.add(performButton, gbc);
+        Button toggleButton = new Button("Toggle (Encrypt/Decrypt)");
+        Button performButton = new Button("Perform Action");
 
-        frame.add(mainPanel);
+        mainGrid.add(titleLabel, 0, 0, 2, 1);
+        mainGrid.add(filePathField, 0, 1, 2, 1);
+        mainGrid.add(toggleButton, 0, 2, 2, 1);
+        mainGrid.add(performButton, 0, 3, 2, 1);
 
-        frame.setPreferredSize(new Dimension(500, 250)); // 调整窗口大小
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-
-        // 拖拽文件功能
-        frame.setDropTarget(new DropTarget() {
-            @Override
-            public void drop(DropTargetDropEvent dtde) {
-                try {
-                    dtde.acceptDrop(DnDConstants.ACTION_COPY);
-                    java.util.List<File> droppedFiles = (java.util.List<File>) dtde.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
-                    if (!droppedFiles.isEmpty()) {
-                        File selectedFile = droppedFiles.get(0);
-                        selectedFilePath = selectedFile.getAbsolutePath();
-                        selectedFileName = selectedFile.getName();
-                        selectedPath = selectedFile.getParent();
-                        filePathField.setText(selectedFilePath);
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
+        mainGrid.setOnDragOver(event -> {
+            if (event.getDragboard().hasFiles()) {
+                event.acceptTransferModes(TransferMode.COPY);
             }
+            event.consume();
         });
 
-        browseButton.addActionListener(e -> {
-            JFileChooser fileChooser = new JFileChooser();
-            int returnValue = fileChooser.showOpenDialog(null);
-            if (returnValue == JFileChooser.APPROVE_OPTION) {
-                File selectedFile = fileChooser.getSelectedFile();
-                selectedFilePath = selectedFile.getAbsolutePath();
-                selectedFileName = selectedFile.getName();
-                selectedPath = selectedFile.getParent();
+        mainGrid.setOnDragDropped(event -> {
+            filePathField.clear();
+            if (event.getDragboard().hasFiles()) {
+                selectedFilePath = event.getDragboard().getFiles().get(0).getAbsolutePath();
+                selectedFileName = event.getDragboard().getFiles().get(0).getName();
+                selectedPath = event.getDragboard().getFiles().get(0).getParent();
                 filePathField.setText(selectedFilePath);
             }
+            event.setDropCompleted(true);
+            event.consume();
         });
 
-        toggleButton.addActionListener(e -> {
+        Scene scene = new Scene(mainGrid, 500, 250);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+
+        toggleButton.setOnAction(event -> {
             isEncryptionMode = !isEncryptionMode;
             titleLabel.setText("Select a file to " + (isEncryptionMode ? "encrypt" : "decrypt") + ":");
         });
 
-        performButton.addActionListener(e -> {
+        performButton.setOnAction(event -> {
             if (selectedFilePath == null || selectedFilePath.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "Please select a file.");
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText(null);
+                alert.setContentText("Please select a file.");
+                alert.showAndWait();
                 return;
             }
             if (isEncryptionMode) {
                 // 文件加密
-                if(selectedFileName.contains(".encrypted")){
-                    JOptionPane.showMessageDialog(null, "This file is already encrypted.");
-                    return;
-                }
-                try {
-                    FileEncrypt.encrypt(selectedFilePath);
-                    JOptionPane.showMessageDialog(null, "File encrypted successfully.");
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "Error: " + ex.getMessage());
+                if (selectedFileName.contains(".encrypted")) {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Information");
+                    alert.setHeaderText(null);
+                    alert.setContentText("This file is already encrypted.");
+                    alert.showAndWait();
+                } else {
+                    try {
+                        // 调用文件加密方法
+                         FileEncrypt.encrypt(selectedFilePath);
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Information");
+                        alert.setHeaderText(null);
+                        alert.setContentText("File encrypted successfully.");
+                        alert.showAndWait();
+                    } catch (Exception ex) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Error");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Error: " + ex.getMessage());
+                        alert.showAndWait();
+                    }
                 }
             } else {
                 // 文件解密
                 try {
-                    String outputFilePath = String.valueOf(Paths.get(selectedPath));
-                    FileDecrypt.decrypt(selectedFilePath, outputFilePath, selectedFilePath);
-                    JOptionPane.showMessageDialog(null, "File decrypted successfully.");
+                    // 调用文件解密方法
+                     String outputFilePath = String.valueOf(Paths.get(selectedPath));
+                     FileDecrypt.decrypt(selectedFilePath, outputFilePath, selectedFilePath);
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Information");
+                    alert.setHeaderText(null);
+                    alert.setContentText("File decrypted successfully.");
+                    alert.showAndWait();
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "Error: " + ex.getMessage());
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Error");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Error: " + ex.getMessage());
+                    alert.showAndWait();
                 }
             }
         });
-
-        frame.setVisible(true);
     }
 }
