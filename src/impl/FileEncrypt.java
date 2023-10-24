@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
+import java.util.zip.GZIPOutputStream;
 
 public class FileEncrypt {
 
@@ -22,28 +23,59 @@ public class FileEncrypt {
         Cipher cipher = Cipher.getInstance("AES");
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
 
-        // Read the input file and encrypt it
-        byte[] inputData = Files.readAllBytes(Paths.get(inputFilePath));
-        byte[] encryptedData = cipher.doFinal(inputData);
+        //Read Input
+        Path inputPath = Paths.get(inputFilePath);
+        File inputFile = inputPath.toFile();
+        String inputFileName = inputFile.getName();
+        int lastDotIndex = inputFileName.lastIndexOf('.');
+        if (lastDotIndex > 0)
+            inputFileName = inputFileName.substring(0, lastDotIndex);
 
-        Path outputFilePath = Paths.get(inputFilePath + ".encrypted");
+        // Read the input file and encrypt it
+        ByteArrayOutputStream compressedStream = new ByteArrayOutputStream();
+        try (GZIPOutputStream gzipStream = new GZIPOutputStream(compressedStream)) {
+            gzipStream.write(Files.readAllBytes(inputPath));
+        }
+
+        byte[] compressedData = compressedStream.toByteArray();
+        byte[] inputData = cipher.doFinal(compressedData);
+
+        // 获取原文件名
+        String originalFileName = new File(inputFilePath).getName();
+        byte[] originalFileNameBytes = modifyString(originalFileName);
+
+        // 添加一个零字节作为原文件名的结束标记
+        byte[] encryptedData = new byte[originalFileNameBytes.length + 1 + inputData.length];
+        encryptedData[originalFileNameBytes.length] = 0x00; // 结束标记
+        System.arraycopy(originalFileNameBytes, 0, encryptedData, 0, originalFileNameBytes.length);
+        System.arraycopy(inputData, 0, encryptedData, originalFileNameBytes.length + 1, inputData.length);
+        Path outputFilePath = Paths.get(inputPath.getParent() + "/" + inputFileName + ".encrypted");
+
+
         Files.write(outputFilePath, encryptedData);
 
         // Save the AES key to a file
-        ObjectOutputStream keyOut = new ObjectOutputStream(Files.newOutputStream(Paths.get(inputFilePath + ".encrypted" + ".key")));
+        ObjectOutputStream keyOut = new ObjectOutputStream(Files.newOutputStream(Paths.get(inputPath.getParent() + "/" + inputFileName + ".encrypted" + ".key")));
         keyOut.writeObject(modifyKey(secretKey));
         keyOut.close();
     }
 
     private static byte[] modifyKey(SecretKey originalKey) {
         byte[] keyBytes = originalKey.getEncoded();
+        return modifyBytes(keyBytes);
+    }
 
+    private static byte[] modifyString(String originalStr) {
+        byte[] strBytes = originalStr.getBytes();
+        return modifyBytes(strBytes);
+    }
+
+    private static byte[] modifyBytes(byte[] keyBytes) {
         // Complex bit manipulation operations
         for (int i = 0; i < keyBytes.length; i++) {
             keyBytes[i] = (byte) (keyBytes[i] ^ 0xFF); // Invert all bits using XOR (^)
             //这里可以添加自己的位运算
         }
-
         return keyBytes;
     }
 }

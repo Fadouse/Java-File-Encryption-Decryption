@@ -89,8 +89,6 @@ public class Main {
 
         browseButton.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
-            FileNameExtensionFilter filter = new FileNameExtensionFilter("Text Files", "txt");
-            fileChooser.setFileFilter(filter);
             int returnValue = fileChooser.showOpenDialog(null);
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
@@ -126,15 +124,9 @@ public class Main {
             } else {
                 // 文件解密
                 try {
-                    String fileName = selectedFileName.replace(".encrypted", "");
-                    fileName = fileName.replace(fileName.replace(".jar",""), fileName.replace(".jar","") + "-decrypt");
-
-                    String returnValue = JOptionPane.showInputDialog("Save File name", fileName);
-                    if (returnValue != null) {
-                        String outputFilePath = String.valueOf(Paths.get(selectedPath, returnValue));
-                        FileDecrypt.decrypt(selectedFilePath, outputFilePath, selectedFilePath);
-                        JOptionPane.showMessageDialog(null, "File decrypted successfully.");
-                    }
+                    String outputFilePath = String.valueOf(Paths.get(selectedPath));
+                    FileDecrypt.decrypt(selectedFilePath, outputFilePath, selectedFilePath);
+                    JOptionPane.showMessageDialog(null, "File decrypted successfully.");
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Error: " + ex.getMessage());
                 }
