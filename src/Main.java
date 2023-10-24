@@ -10,8 +10,11 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.nio.file.Paths;
 import java.util.Objects;
 
@@ -29,7 +32,7 @@ public class Main extends Application {
     public void start(Stage primaryStage) {
         primaryStage.setTitle("File Encryption/Decryption");
 
-        Image icon = new Image(Objects.requireNonNull(getClass().getResourceAsStream("resource/tool.png")));
+        Image icon = new Image(Objects.requireNonNull(getClass().getResourceAsStream("resource/lock.png")));
         primaryStage.getIcons().add(icon);
 
         GridPane mainGrid = new GridPane();
@@ -40,15 +43,20 @@ public class Main extends Application {
         Label titleLabel = new Label("Select a file to " + (isEncryptionMode ? "encrypt" : "decrypt") + ":");
         titleLabel.setStyle("-fx-font-size: 16");
 
+        HBox fileSelectionBox = new HBox(); // Create an HBox for file selection
         TextField filePathField = new TextField();
         filePathField.setPrefColumnCount(20);
         filePathField.setEditable(false);
+        Button selectFileButton = new Button("Select File"); // Create a "Select File" button
+
+        fileSelectionBox.getChildren().addAll(filePathField, selectFileButton); // Add both TextField and Button to HBox
+        fileSelectionBox.setSpacing(5); // Set spacing between elements
 
         Button toggleButton = new Button("Toggle (Encrypt/Decrypt)");
         Button performButton = new Button("Perform Action");
 
         mainGrid.add(titleLabel, 0, 0, 2, 1);
-        mainGrid.add(filePathField, 0, 1, 2, 1);
+        mainGrid.add(fileSelectionBox, 0, 1, 2, 1); // Add the HBox with TextField and Button
         mainGrid.add(toggleButton, 0, 2, 2, 1);
         mainGrid.add(performButton, 0, 3, 2, 1);
 
@@ -74,6 +82,19 @@ public class Main extends Application {
         Scene scene = new Scene(mainGrid, 500, 250);
         primaryStage.setScene(scene);
         primaryStage.show();
+
+        selectFileButton.setOnAction(event -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Select File");
+            File selectedFile = fileChooser.showOpenDialog(primaryStage);
+
+            if (selectedFile != null) {
+                selectedFilePath = selectedFile.getAbsolutePath();
+                selectedFileName = selectedFile.getName();
+                selectedPath = selectedFile.getParent();
+                filePathField.setText(selectedFilePath);
+            }
+        });
 
         toggleButton.setOnAction(event -> {
             isEncryptionMode = !isEncryptionMode;
