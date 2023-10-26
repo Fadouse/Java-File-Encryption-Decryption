@@ -1,7 +1,10 @@
 package impl;
 
-import javax.crypto.*;
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,41 +43,29 @@ public class FileEncrypt {
         byte[] compressedData = compressedStream.toByteArray();
         byte[] inputData = cipher.doFinal(compressedData);
 
-        // 获取原文件名
+        // Get original file name
         String originalFileName = new File(inputFilePath).getName();
-        byte[] originalFileNameBytes = modifyString(originalFileName);
+        byte[] originalFileNameBytes = modify(originalFileName.getBytes(StandardCharsets.UTF_8));
 
-        // 添加一个零字节作为原文件名的结束标记
+        // Add a 0x00 as a marker
         byte[] encryptedData = new byte[originalFileNameBytes.length + 1 + inputData.length];
         encryptedData[originalFileNameBytes.length] = 0x00; // 结束标记
         System.arraycopy(originalFileNameBytes, 0, encryptedData, 0, originalFileNameBytes.length);
         System.arraycopy(inputData, 0, encryptedData, originalFileNameBytes.length + 1, inputData.length);
         Path outputFilePath = Paths.get(inputPath.getParent() + "/" + inputFileName + ".encrypted");
 
-
         Files.write(outputFilePath, encryptedData);
 
         // Save the AES key to a file
         ObjectOutputStream keyOut = new ObjectOutputStream(Files.newOutputStream(Paths.get(inputPath.getParent() + "/" + inputFileName + ".encrypted" + ".key")));
-        keyOut.writeObject(modifyKey(secretKey));
+        keyOut.writeObject(modify(secretKey.getEncoded()));
         keyOut.close();
     }
 
-    private static byte[] modifyKey(SecretKey originalKey) {
-        byte[] keyBytes = originalKey.getEncoded();
-        return modifyBytes(keyBytes);
-    }
-
-    private static byte[] modifyString(String originalStr) {
-        byte[] strBytes = originalStr.getBytes();
-        return modifyBytes(strBytes);
-    }
-
-    private static byte[] modifyBytes(byte[] keyBytes) {
-        // Complex bit manipulation operations
+    private static byte[] modify(byte[] keyBytes) {
         for (int i = 0; i < keyBytes.length; i++) {
-            keyBytes[i] = (byte) (keyBytes[i] ^ 0xFF); // Invert all bits using XOR (^)
-            //这里可以添加自己的位运算
+            keyBytes[i] = (byte) (keyBytes[i] ^ 0xFF);
+            //Here you can add other modify.
         }
         return keyBytes;
     }

@@ -2,13 +2,14 @@ package impl;
 
 import javafx.stage.FileChooser;
 
-import javax.crypto.*;
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.Path;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
 
@@ -32,7 +33,7 @@ public class FileDecrypt {
 
         try {
             ObjectInputStream keyIn = new ObjectInputStream(Files.newInputStream(path));
-            secretKey = restoreKey((byte[]) keyIn.readObject());
+            secretKey = new SecretKeySpec(restore((byte[]) keyIn.readObject()), "AES");
             keyIn.close();
         } catch (Exception e) {
             throw new Exception("AES key file not valid.");
@@ -63,7 +64,6 @@ public class FileDecrypt {
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
 
         byte[] decryptedData = cipher.doFinal(encryptedDataWithoutFileName);
-
         byte[] decompressedData = getDecompressedData(decryptedData);
 
         // Save the decrypted data to a file
@@ -85,18 +85,10 @@ public class FileDecrypt {
         return outputStream.toByteArray();
     }
 
-    private static SecretKey restoreKey(byte[] modifiedKey) {
-        try {
-            return new SecretKeySpec(restore(modifiedKey), "AES");
-        }catch (Exception e){
-            return null;
-        }
-    }
 
     private static byte[] restore(byte[] modifiedBytes){
-        // Reverse the complex bit manipulation operations
         for (int i = 0; i < modifiedBytes.length; i++) {
-            modifiedBytes[i] = (byte) (modifiedBytes[i] ^ 0xFF); // Reverse the inversion of all bits using XOR (^)
+            modifiedBytes[i] = (byte) (modifiedBytes[i] ^ 0xFF);
         }
         return modifiedBytes;
     }

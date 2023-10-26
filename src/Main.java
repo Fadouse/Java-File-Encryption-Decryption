@@ -79,7 +79,7 @@ public class Main extends Application {
             event.consume();
         });
 
-        Scene scene = new Scene(mainGrid, 500, 250);
+        Scene scene = new Scene(mainGrid, 350, 160);
         primaryStage.setScene(scene);
         primaryStage.show();
 
@@ -111,7 +111,7 @@ public class Main extends Application {
                 return;
             }
             if (isEncryptionMode) {
-                // 文件加密
+                // File Encrypt
                 if (selectedFileName.contains(".encrypted")) {
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setTitle("Information");
@@ -120,8 +120,7 @@ public class Main extends Application {
                     alert.showAndWait();
                 } else {
                     try {
-                        // 调用文件加密方法
-                         FileEncrypt.encrypt(selectedFilePath);
+                        FileEncrypt.encrypt(selectedFilePath);
                         Alert alert = new Alert(Alert.AlertType.INFORMATION);
                         alert.setTitle("Information");
                         alert.setHeaderText(null);
@@ -136,9 +135,8 @@ public class Main extends Application {
                     }
                 }
             } else {
-                // 文件解密
+                // File Decrypt
                 try {
-                    // 调用文件解密方法
                      String outputFilePath = String.valueOf(Paths.get(selectedPath));
                      FileDecrypt.decrypt(selectedFilePath, outputFilePath, selectedFilePath);
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
